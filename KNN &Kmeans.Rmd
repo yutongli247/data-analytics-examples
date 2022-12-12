@@ -1,0 +1,126 @@
+---
+title: "YutongLiHW6"
+author: "Yutong Li"
+date: "2022-11-02"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#a
+```{r}
+#install.packages("palmerpenguins")
+library(palmerpenguins)
+attach(penguins)
+```
+
+#b
+```{r}
+penguins <- na.omit(penguins)
+penguins
+```
+
+#c 
+# Before you set up your model you’ll want to normalize your predictors. One way to do this is
+#using the built in scale() function in R, which normalizes the variable in question to have mean
+#Value 0 and standard deviation 1. Using a combination of scale() and sapply(), normalize all
+#of the numerical columns in the penguins dataset
+```{r}
+
+col <- sapply(penguins,is.numeric)
+penguins[col] <- lapply(penguins[col],scale)#[c(3:5)])
+penguins
+
+
+```
+
+#d
+#Since your model will use the two predictors that include measure of length, use grep() to find
+#the columns in the datset that refer to “length.” Save these columns as length col.
+```{r}
+len<-grep("length", names(penguins), value=TRUE)
+length_col<-penguins[,len]
+
+```
+
+#e
+#Split your data into an equal sized training set and test set. You’ll need to do this randomly
+#by setting a seed (choose your own 5 digit seed) and sampling nrow(penguins)*.5 items from
+#nrow(penguins). Call this set tr.
+```{r}
+set.seed(88888)
+tr<-sample(nrow(penguins),nrow(penguins) *.5)
+```
+#f
+#Using the rows indices from part (e) and column indices from part (d), define your training and
+#test sets.
+```{r}
+
+train<-length_col[tr, ]
+test<-length_col[-tr,]
+
+```
+#g
+#Train the model and include a copy of the table() for your model evaluated on testing data.
+```{r}
+library(class)
+knn <- knn(train, test, penguins$species[tr])
+head(knn)
+```
+```{r}
+table(knn,penguins$species[-tr])
+mean(knn== penguins$species[-tr])
+```
+```{r}
+library('caret') 
+cm <- confusionMatrix(table(knn,penguins$species[-tr]))
+cm
+```
+
+#(h) In a few words, explain how your model did.
+#I think the model did a great job. We got accuracy of 0.9461 which is the proportion of true positive and true negative in all evaluated cases.The sensitivities of 3 classes penguins are relatively high which means the probability that an actual positive will test positive is high. Out of 73 Adelie, 70 Adelie are correctly classified as Adelie . Out of 35 Chinstrap, 30 Chinstrap are correctly classified as Chinstrap and 2 are classified as Adelie, 3 are classified as Gentoo. Out of 59 Gentoo, 58 Gentoo are correctly classified as Gentoo and 1 are classified as Adelie. 
+
+#2. Using the mlc churn dataset from lab, let’s try some K-means clustering. Load the dataset as you
+#did in lab.
+
+```{r}
+library("C50")
+library("modeldata")
+library(data.table)
+data(mlc_churn)
+dim(mlc_churn)
+data.table(mlc_churn)
+
+```
+#(a) Start by setting a random seed, and apply the same scaling method that you used in part (c)
+#above.
+```{r}
+set.seed(88)
+coln <- sapply(mlc_churn,is.numeric)
+mlc_churn[coln] <- lapply(mlc_churn[coln],scale)
+mlc_churn
+
+```
+
+#(b) Begin by subsetting the data to choose only the rows of mlc churn where international plan
+#== yes. Call this new dataset intl churn.
+```{r}
+intl_churn<-subset(mlc_churn,international_plan=='yes')
+intl_churn
+```
+
+#(c) Create a K-means cluster model using this new dataset and the predictor variables total day minutes
+#and total intl minutes with 3 clusters. Include a plot of this model outcome, colored by cluster.
+```{r}
+i <-c("total_day_minutes","total_intl_minutes")
+x <-intl_churn[, i]
+cl <- kmeans(x, 3, nstart = 10)
+plot(x, col = cl$cluster)
+```
+
